@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="window_black">#FF0B0B0B</color>
+    <color name="icon_background">#FF161616</color>
+
+    <!-- Black window so there's no white flash before Compose draws. -->
+    <style name="Theme.AudioPlayer" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/window_black</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>
