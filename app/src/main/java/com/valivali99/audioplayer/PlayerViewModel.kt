@@ -3,6 +3,7 @@ package com.valivali99.audioplayer
 import android.app.Application
 import android.content.ComponentName
 import androidx.annotation.OptIn
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -22,11 +23,31 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.Normalizer
+
+private val diacritics = Regex("\\p{Mn}+")
+
+/** Lowercase without accents, so "beyonce" finds "Beyoncé". */
+private fun normalize(text: String): String =
+    Normalizer.normalize(text, Normalizer.Form.NFD).replace(diacritics, "").lowercase()
 
 /** Library + playback state for the UI, talking to [PlaybackService] through a MediaController. */
 class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     var songs by mutableStateOf<List<Song>>(emptyList()); private set
     var libraryLoaded by mutableStateOf(false); private set
+
+    /** Text typed in the library's search bar. */
+    var query by mutableStateOf("")
+
+    /** [songs] narrowed to those whose title, artist or album contain every word of [query]. */
+    val visibleSongs by derivedStateOf {
+        val words = normalize(query).split(' ').filter { it.isNotEmpty() }
+        if (words.isEmpty()) songs
+        else songs.filter { song ->
+            val text = normalize("${song.title} ${song.artist} ${song.album}")
+            words.all { it in text }
+        }
+    }
 
     var currentId by mutableStateOf<Long?>(null); private set
     var currentTitle by mutableStateOf(""); private set

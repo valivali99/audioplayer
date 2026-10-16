@@ -20,10 +20,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.Button
@@ -32,10 +36,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,7 +61,17 @@ fun LibraryScreen(vm: PlayerViewModel, onOpenNowPlaying: () -> Unit) {
             contentPadding = PaddingValues(bottom = 12.dp),
         ) {
             item(key = "header") { Header(vm) }
-            items(vm.songs, key = { it.id }) { song ->
+            if (vm.query.isNotBlank() && vm.visibleSongs.isEmpty()) {
+                item(key = "no-matches") {
+                    Text(
+                        "No tracks match “${vm.query.trim()}”",
+                        color = Palette.TextDim,
+                        fontSize = 15.sp,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
+                    )
+                }
+            }
+            items(vm.visibleSongs, key = { it.id }) { song ->
                 SongRow(
                     song = song,
                     isCurrent = song.id == vm.currentId,
@@ -78,11 +97,14 @@ private fun Header(vm: PlayerViewModel) {
         val subtitle = when {
             !vm.libraryLoaded -> "Loading…"
             vm.songs.isEmpty() -> "No audio files found on this phone"
+            vm.query.isNotBlank() -> "${vm.visibleSongs.size} of ${vm.songs.size} tracks"
             else -> "${vm.songs.size} tracks · recently modified first"
         }
         Text(subtitle, color = Palette.TextDim, fontSize = 14.sp)
         if (vm.songs.isNotEmpty()) {
             Spacer(Modifier.height(16.dp))
+            SearchBar(query = vm.query, onQueryChange = { vm.query = it })
+            Spacer(Modifier.height(12.dp))
             Button(
                 onClick = vm::shuffleAll,
                 shape = RoundedCornerShape(50),
@@ -95,6 +117,38 @@ private fun Header(vm: PlayerViewModel) {
             }
         }
     }
+}
+
+@Composable
+private fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
+    val focusManager = LocalFocusManager.current
+    TextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier.fillMaxWidth(),
+        placeholder = { Text("Search songs, artists, albums", color = Palette.Muted) },
+        leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, tint = Palette.TextDim) },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Rounded.Close, contentDescription = "Clear search", tint = Palette.TextDim)
+                }
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(50),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Palette.SurfaceHigh,
+            unfocusedContainerColor = Palette.Surface,
+            focusedTextColor = Palette.White,
+            unfocusedTextColor = Palette.Text,
+            cursorColor = Palette.White,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+        ),
+    )
 }
 
 @Composable
