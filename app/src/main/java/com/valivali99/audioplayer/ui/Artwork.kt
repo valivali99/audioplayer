@@ -8,7 +8,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -19,15 +23,13 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.valivali99.audioplayer.R
 import com.valivali99.audioplayer.songUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** A song's embedded cover art, or the black-hole picture when it has none. */
+/** A song's embedded cover art, or a gray tile with a note when it has none. */
 @Composable
 fun Artwork(songId: Long?, modifier: Modifier = Modifier, sizePx: Int = 160, corner: Dp = 8.dp) {
     val context = LocalContext.current
@@ -44,12 +46,7 @@ fun Artwork(songId: Long?, modifier: Modifier = Modifier, sizePx: Int = 160, cor
         if (art != null) {
             Image(art, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         } else {
-            Image(
-                painterResource(R.drawable.artwork_placeholder),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
+            Icon(Icons.Rounded.MusicNote, contentDescription = null, tint = Palette.Muted, modifier = Modifier.size(28.dp))
         }
     }
 }
